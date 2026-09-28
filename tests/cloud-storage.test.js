@@ -36,6 +36,14 @@ test('private cloud storage persists across clients, merges writes and serves at
   await Promise.all([a.commit(first.state, left, first.etag), b.commit(second.state, right, second.etag)]);
   const result = await createCloudStorage(() => ({})).read();
   assert.deepEqual(result.state.sessions.map(s => s.token).sort(), ['a','b']);
+  await Promise.all(Array.from({length:6},async(_,i)=>{
+    const client=createCloudStorage(()=>({}));
+    const before=await client.read();
+    const next=structuredClone(before.state);
+    next.sessions.push({token:'parallel-'+i});
+    await client.commit(before.state,next,before.etag);
+  }));
+  assert.equal((await a.read()).state.sessions.length,8);
   await a.putFile('sample', Buffer.from('private attachment verification'));
   assert.equal((await b.getFile('sample')).toString(), 'private attachment verification');
 });

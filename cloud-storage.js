@@ -71,12 +71,17 @@ function createCloudStorage(seed) {
     read,
     async commit(base, next, etag) {
       let candidate = next;
-      for (let attempt = 0; attempt < 8; attempt++) {
+      for (let attempt = 0; attempt < 12; attempt++) {
         try {
           await put(pathname, JSON.stringify(candidate), { ...options, contentType: 'application/json', allowOverwrite: true, ifMatch: etag });
           return;
         } catch (error) {
-          if (!(error instanceof BlobPreconditionFailedError)) throw error;
+          // Blob can report simultaneous conditional PUTs as a transient
+          // operation conflict rather than a precondition failure. Both need
+          // a fresh snapshot and a conditional retry, never an unconditional PUT.
+          const operationConflict = error.message?.includes('conditional request cannot succeed due to a conflicting operation');
+          if (!(error instanceof BlobPreconditionFailedError) && !operationConflict) throw error;
+          await new Promise(resolve => setTimeout(resolve, 30 + attempt * 20 + Math.random() * 80));
           const latest = await read();
           candidate = mergeState(base, next, latest.state);
           etag = latest.etag;

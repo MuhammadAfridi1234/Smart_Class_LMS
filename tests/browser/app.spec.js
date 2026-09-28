@@ -1,0 +1,52 @@
+const {test,expect}=require('@playwright/test');
+test('teacher dashboard and creation flows, desktop and mobile',async({page})=>{
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('/');
+ await page.getByRole('button',{name:'Teacher',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Dashboard',exact:true})).toBeVisible();
+ await page.waitForTimeout(500);
+ await page.screenshot({path:'tmp/dashboard-desktop.png',fullPage:true});
+ await page.getByRole('button',{name:'Create class',exact:true}).click();
+ await page.getByLabel('Class name', {exact:true}).fill('Interaction Design');
+ await page.getByLabel('Subject code').fill('CSE 499');
+ await page.getByLabel('Section',{exact:true}).fill('03');
+ await page.getByRole('dialog').getByRole('button',{name:'Create class',exact:true}).click();
+ await expect(page.getByRole('dialog')).not.toBeVisible();
+ await page.locator('.sidebar').getByRole('button',{name:/My classes/}).click();
+ await expect(page.getByRole('heading',{name:'Interaction Design',exact:true})).toBeVisible();
+ for(const name of ['Assignments','Attendance','Quizzes & polls','Analytics','Calendar','Learning materials','Messages','Guardian access','Notifications','Archived classes','Profile & settings']){
+  await page.locator('.sidebar').getByRole('button',{name,exact:true}).click();
+  await expect(page.locator('#page-content')).not.toBeEmpty();
+ }
+ await page.locator('.sidebar').getByRole('button',{name:'Overview',exact:true}).click();
+ await page.setViewportSize({width:390,height:844});
+ await page.waitForTimeout(500);
+ await page.screenshot({path:'tmp/dashboard-mobile.png',fullPage:true});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBeTruthy();
+ await page.getByRole('button',{name:'Open navigation'}).click();
+ await page.locator('.sidebar').getByRole('button',{name:'Assignments',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Assignments',exact:true})).toBeVisible();
+ expect(errors).toEqual([]);
+});
+test('student quiz and offline QR rendering',async({page,context})=>{
+ await page.goto('/');await page.getByRole('button',{name:'Student',exact:true}).click();
+ await page.locator('.sidebar').getByRole('button',{name:'Quizzes & polls',exact:true}).click();
+ await page.getByRole('button',{name:'Start quiz',exact:true}).click();
+ await page.getByLabel('Agile',{exact:true}).check();
+ await page.getByLabel('Software Requirements Specification',{exact:true}).check();
+ await page.getByRole('button',{name:'Submit quiz',exact:true}).click();
+ await expect(page.getByText('Score: 2/2',{exact:true})).toBeVisible();
+ await page.locator('.sidebar').getByRole('button',{name:'Assignments',exact:true}).click();
+ await page.locator('.list-row').filter({hasText:'Software requirements specification'}).getByRole('button',{name:'View',exact:true}).click();
+ await page.getByRole('button',{name:'Create offline hand-in token'}).click();
+ await expect(page.locator('#offline-qr')).toBeVisible();
+ expect(await page.locator('#offline-qr').evaluate(el=>el.width)).toBeGreaterThan(100);
+ await page.getByRole('button',{name:'Close dialog',exact:true}).click();
+ await page.evaluate(()=>navigator.serviceWorker.ready);
+ await context.setOffline(true);
+ await page.reload();
+ await expect(page.getByRole('heading',{name:'Your offline classroom',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Hand-in token',exact:true}).first().click();
+ await expect(page.locator('#offline-qr')).toBeVisible();
+ await context.setOffline(false);
+});

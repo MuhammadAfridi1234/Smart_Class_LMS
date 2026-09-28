@@ -1,0 +1,32 @@
+{
+  "name": "smart_class_lms",
+  "version": "1.0.0",
+  "description": "SmartClass LMS - HTML, CSS and JavaScript with Node.js and SQLite",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "dev": "node --watch --env-file-if-exists=.env server.js",
+    "test": "node --test tests/api.test.js",
+    "test:ui": "playwright test",
+    "build:qr": "esbuild node_modules/qrcode/lib/browser.js --bundle --platform=browser --global-name=QRCode --minify --outfile=public/qrcode.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "chart.js": "^4.5.1",
+    "express": "^5.2.1",
+    "multer": "^2.4.0",
+    "pdf-parse": "^2.4.5",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "esbuild": "^0.28.2"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

@@ -1,0 +1,1 @@
+module.exports={testDir:'./tests/browser',timeout:30000,use:{baseURL:'http://localhost:3100',headless:true,viewport:{width:1440,height:1000}},webServer:{command:'node server.js',url:'http://localhost:3100',env:{PORT:'3100',DATA_DIR:'tmp/browser-data-'+Date.now()},reuseExistingServer:false},reporter:'list'};

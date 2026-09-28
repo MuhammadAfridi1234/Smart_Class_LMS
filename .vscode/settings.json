@@ -1,0 +1,17 @@
+{
+  "liveServer.settings.root": "/public",
+  "liveServer.settings.port": 5500,
+  "liveServer.settings.host": "127.0.0.1",
+  "liveServer.settings.proxy": {
+    "enable": true,
+    "baseUri": "/api",
+    "proxyUri": "http://localhost:3000/api"
+  },
+  "liveServer.settings.ignoreFiles": [
+    ".vscode/**",
+    "**/node_modules/**",
+    "**/data/**",
+    "**/tmp/**",
+    "**/test-results/**"
+  ]
+}

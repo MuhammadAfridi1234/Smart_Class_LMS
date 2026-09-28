@@ -28,7 +28,7 @@ test('private cloud storage persists across clients, merges writes and serves at
 }, async () => {
   // A separate namespace ensures this verification never changes classroom data.
   process.env.SMARTCLASS_STORAGE_PREFIX = 'smartclass/verification-' + Date.now();
-  const a = createCloudStorage(() => ({ users: [], sessions: [] }));
+  const a = createCloudStorage(() => ({ users: [], sessions: [], description: 'Large compressible classroom state. '.repeat(300) }));
   const b = createCloudStorage(() => ({ users: [], sessions: [] }));
   const first = await a.read(), second = await b.read();
   const left = structuredClone(first.state), right = structuredClone(second.state);

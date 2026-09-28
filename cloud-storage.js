@@ -50,16 +50,19 @@ function createCloudStorage(seed) {
   const prefix = process.env.SMARTCLASS_STORAGE_PREFIX || 'smartclass/production';
   const pathname = prefix + '/state.json';
   const options = { access: 'private', addRandomSuffix: false };
+  // Read the identity representation: compression can produce a weak ETag,
+  // which is not valid for the storage API's conditional writes.
+  const readOptions = { access: 'private', useCache: false, headers: { 'Accept-Encoding': 'identity' } };
   async function read() {
-    let result = await get(pathname, { access: 'private', useCache: false });
+    let result = await get(pathname, readOptions);
     if (!result) {
       try { await put(pathname, JSON.stringify(seed()), { ...options, contentType: 'application/json', allowOverwrite: false }); }
       catch (error) {
         // A second cold start may have initialized the store concurrently.
-        result = await get(pathname, { access: 'private', useCache: false });
+        result = await get(pathname, readOptions);
         if (!result) throw error;
       }
-      result ||= await get(pathname, { access: 'private', useCache: false });
+      result ||= await get(pathname, readOptions);
     }
     if (!result) throw new Error('Unable to initialize private storage.');
     return { state: await new Response(result.stream).json(), etag: result.blob.etag };

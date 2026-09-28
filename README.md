@@ -32,7 +32,7 @@ The demo student is enrolled in three sample classes. Guardian access starts emp
 3. Open `public/index.html`, right-click, and choose **Open with Live Server**.
 4. The frontend opens at `http://127.0.0.1:5500`. Use the demo login buttons as usual.
 
-The supplied `.vscode/settings.json` serves only the `public` folder and forwards `/api` requests to `http://localhost:3000/api`. CSS, JavaScript, QR generation and charts are local files. Stop and restart Live Server if it was already running when these settings changed. Login, saving data, uploads and reports require the Node backend; Live Server itself only serves frontend files.
+Live Server serves the `public` folder. The page automatically opens `http://localhost:3000` so login, cookies, attachments and charts use the same backend. Keep `npm start` running. CSS, JavaScript, QR generation and charts are local files. Stop and restart Live Server if it was already running when these settings changed. Login, saving data, uploads and reports require the Node backend; Live Server itself only serves frontend files.
 
 Proxy configuration follows the [Live Server settings documentation](https://github.com/ritwickdey/vscode-live-server/blob/master/docs/settings.md).
 
@@ -96,6 +96,16 @@ Tests use separate temporary databases and do not modify your working database. 
 
 ## Deployment boundary
 
-This is a local/demo implementation, not a hardened institutional deployment. It uses SQLite to store a transactional application-state document rather than the PDF's normalized 22-table MySQL design. It is intended for a single Node process. Before a public deployment, remove or change seeded demo credentials, use HTTPS and secure cookies, introduce controlled teacher registration and durable backups, and review account recovery, institutional privacy policies and upload scanning. Uploaded files are limited to 10 MB and require authenticated, authorized access.
+This is a local/demo implementation, not a hardened institutional deployment. It uses SQLite to store a transactional application-state document rather than the PDF's normalized 22-table MySQL design. It is intended for a single Node process. Before a public deployment, remove or change seeded demo credentials, use HTTPS and secure cookies, introduce controlled teacher registration and durable backups, and review account recovery, institutional privacy policies and upload scanning. Uploaded files are limited to 4 MB and require authenticated, authorized access.
 
 Archived classes remain stored after their 48-hour restoration window; automatic permanent deletion is deliberately not implemented. Avatar uploads and a separate personal file archive are not implemented. See the requirements mapping for precise coverage.
+
+## Vercel deployment
+
+Use Node.js 24.x. The repository is connected to the `smart-class-lms` Vercel project. Pushes to `main` deploy production. `vercel.json` routes requests to Express.
+
+Connect a Neon Free database through the Vercel Marketplace and enable its `DATABASE_URL` environment variable for Production and Preview. Redeploy after connecting. Accounts, sessions, classroom records and private attachment bytes then use PostgreSQL. Each API request loads its own state in a transaction, locks the shared state row, and commits before returning success, preventing lost updates across instances. Existing local SQLite data stays local; it is not automatically uploaded.
+
+Without `DATABASE_URL`, local development uses `data/smartclass.sqlite`; Vercel only has temporary demo storage. Check `/api/health`: `persistentStorage` must be `true` before relying on cloud data. Existing accounts previously stored in temporary cloud storage cannot be recovered after that instance is lost.
+
+Attendance QR links use the deployed HTTPS origin automatically. Uploads are limited to 4 MB to stay below [Vercel function payload limits](https://vercel.com/docs/errors/function_payload_too_large). AI requires a valid optional OpenRouter key and model.

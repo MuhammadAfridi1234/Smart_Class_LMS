@@ -1,4 +1,21 @@
 const {test,expect}=require('@playwright/test');
+test('register, reload, sign out and sign in with a personal account',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'Create an account',exact:true}).click();
+ await page.getByLabel('Full name').fill('Browser Test Student');
+ const email=`browser-${Date.now()}@example.com`;
+ await page.getByLabel('Email address').fill(email);
+ await page.getByLabel('Password',{exact:true}).fill('TestPassword123!');
+ await page.getByRole('button',{name:'Create account',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Dashboard',exact:true})).toBeVisible();
+ await page.reload();
+ await expect(page.getByRole('heading',{name:'Dashboard',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:/Sign out/}).click();
+ await page.getByLabel('Email address').fill(email);
+ await page.getByLabel('Password',{exact:true}).fill('TestPassword123!');
+ await page.getByRole('button',{name:'Sign in',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Dashboard',exact:true})).toBeVisible();
+});
 test('teacher dashboard and creation flows, desktop and mobile',async({page})=>{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('/');

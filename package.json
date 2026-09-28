@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node --env-file-if-exists=.env server.js",
     "dev": "node --watch --env-file-if-exists=.env server.js",
-    "test": "node --test tests/api.test.js",
+    "test": "node --test tests/*.test.js",
     "test:ui": "playwright test",
     "build:qr": "esbuild node_modules/qrcode/lib/browser.js --bundle --platform=browser --global-name=QRCode --minify --outfile=public/qrcode.js"
   },
@@ -20,6 +20,7 @@
     "express": "^5.2.1",
     "multer": "^2.4.0",
     "pdf-parse": "^2.4.5",
+    "pg": "^8.23.0",
     "qrcode": "^1.5.4"
   },
   "devDependencies": {
@@ -27,6 +28,6 @@
     "esbuild": "^0.28.2"
   },
   "engines": {
-    "node": ">=24.0.0"
+    "node": "24.x"
   }
 }

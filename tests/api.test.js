@@ -38,6 +38,7 @@ test('authenticated role workflows, validation and privacy',async()=>{
  assert.equal((await request('/submissions/'+submission.id+'/grade',{grade:10},student)).status,403);
  const qr=(await request('/attendance/sessions',{classId:c.id,minutes:1},teacher)).data;
  assert.equal(qr.token.length,64);assert.ok(qr.qr.startsWith('data:image/png'));
+ assert.equal(new URL(qr.url).origin,base);
  assert.equal((await request('/attendance/checkin',{token:'bad'},student)).status,400);
  assert.equal((await request('/attendance/checkin',{token:qr.token},student)).status,200);
  assert.equal((await request('/attendance/checkin',{token:qr.token},student)).status,400);
@@ -57,4 +58,25 @@ test('authenticated role workflows, validation and privacy',async()=>{
  assert.equal((await request('/reports/student',undefined,guardian)).status,403);
  await request('/logout',{},teacher);
  assert.equal((await request('/state',undefined,teacher)).status,401);
+});
+
+test('same-origin browser login, rejected origin, attachment authorization and logout',async()=>{
+ const body={email:'student@smartclass.local',password:'password123'};
+ const loginResponse=await fetch(base+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json',Origin:base},body:JSON.stringify(body)});
+ assert.equal(loginResponse.status,200);
+ const cookie=loginResponse.headers.get('set-cookie').split(';')[0];
+ const badOrigin=await fetch(base+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://unrelated.example'},body:JSON.stringify(body)});
+ assert.equal(badOrigin.status,403);
+ const invalid=await request('/auth/login',{...body,password:'incorrect'});
+ assert.equal(invalid.status,401);
+ const form=new FormData();form.append('file',new Blob(['private test document']), 'notes.txt');
+ const upload=await fetch(base+'/api/upload',{method:'POST',headers:{Cookie:cookie},body:form});
+ assert.equal(upload.status,200);
+ const file=await upload.json();
+ const download=await fetch(base+'/api/files/'+file.id,{headers:{Cookie:cookie}});
+ assert.equal(await download.text(),'private test document');
+ const guardian=await login('guardian');
+ assert.equal((await request('/files/'+file.id,undefined,guardian)).status,403);
+ assert.equal((await request('/logout',{},cookie)).status,200);
+ assert.equal((await request('/state',undefined,cookie)).status,401);
 });

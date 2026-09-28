@@ -1,4 +1,4 @@
-const CACHE='smartclass-shell-v1';
-self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(['/','/style.css','/app.js','/vendor/chart.js','/qrcode.js'])));self.skipWaiting();});
-self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));
+const CACHE='smartclass-shell-v2';
+self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(['/','/bootstrap.js','/style.css','/app.js','/vendor/chart.js','/qrcode.js'])));self.skipWaiting();});
+self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('smartclass-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{if(event.request.method!=='GET'||new URL(event.request.url).pathname.startsWith('/api/'))return;event.respondWith(fetch(event.request).catch(()=>caches.match(event.request)));});

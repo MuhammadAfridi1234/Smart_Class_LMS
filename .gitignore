@@ -5,3 +5,8 @@ test-results/
 playwright-report/
 .env
 *.log
+
+.vercel
+
+.env.*
+!.env.example

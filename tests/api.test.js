@@ -67,8 +67,8 @@ test('same-origin browser login, rejected origin, attachment authorization and l
  const cookie=loginResponse.headers.get('set-cookie').split(';')[0];
  const badOrigin=await fetch(base+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://unrelated.example'},body:JSON.stringify(body)});
  assert.equal(badOrigin.status,403);
- const invalid=await request('/auth/login',{...body,password:'incorrect'});
- assert.equal(invalid.status,401);
+ const invalid=await request('/auth/login',{...body,password:'x'});
+ assert.equal(invalid.status,200);
  const form=new FormData();form.append('file',new Blob(['private test document']), 'notes.txt');
  const upload=await fetch(base+'/api/upload',{method:'POST',headers:{Cookie:cookie},body:form});
  assert.equal(upload.status,200);
@@ -79,4 +79,22 @@ test('same-origin browser login, rejected origin, attachment authorization and l
  assert.equal((await request('/files/'+file.id,undefined,guardian)).status,403);
  assert.equal((await request('/logout',{},cookie)).status,200);
  assert.equal((await request('/state',undefined,cookie)).status,401);
+});
+
+
+test('open sign-in creates and reuses accounts with arbitrary passwords',async()=>{
+ const first=await request('/auth/login',{email:' New.Person@example.com ',password:'x'});
+ assert.equal(first.status,200);
+ assert.equal(first.data.email,'new.person@example.com');
+ assert.equal(first.data.role,'student');
+ assert.equal(first.data.password,undefined);
+ assert.equal((await request('/state',undefined,first.cookie)).data.user.id,first.data.id);
+ await request('/logout',{},first.cookie);
+ const again=await request('/auth/login',{email:'NEW.PERSON@example.com',password:'different'});
+ assert.equal(again.status,200);
+ assert.equal(again.data.id,first.data.id);
+ const other=await request('/auth/login',{email:'different@example.com',password:''});
+ assert.equal(other.status,200);
+ assert.notEqual(other.data.id,first.data.id);
+ assert.equal((await request('/auth/login',{email:'invalid',password:'anything'})).status,400);
 });

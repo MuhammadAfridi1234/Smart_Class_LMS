@@ -15,7 +15,7 @@ Open **http://localhost:3000**. No database installation or frontend build is re
 
 On Windows, you can also double-click **Start-SmartClass.bat**. Keep its terminal window open while using the app.
 
-The sign-in page has three demo buttons. You can also register your own accounts.
+Sign in with any valid email and any password (including a blank password). New emails automatically create a Student account; existing emails open that account. Passwords are not verified. Sessions last 24 hours, including page reloads. The three demo buttons also work, and registration lets you choose a role.
 
 | Role | Email | Password |
 | --- | --- | --- |

@@ -6,7 +6,7 @@ functions = "netlify/functions"
 NODE_VERSION = "24"
 [functions]
 node_bundler = "esbuild"
-external_node_modules = ["pg", "pdf-parse"]
+external_node_modules = ["pg"]
 [[redirects]]
 from = "/api/*"
 to = "/.netlify/functions/api/api/:splat"

@@ -100,16 +100,8 @@ This is a local/demo implementation, not a hardened institutional deployment. It
 
 Archived classes remain stored after their 48-hour restoration window; automatic permanent deletion is deliberately not implemented. Avatar uploads and a separate personal file archive are not implemented. See the requirements mapping for precise coverage.
 
-## Vercel deployment
+## Netlify deployment
 
-Use Node.js 24.x. The repository is connected to the `smart-class-lms` Vercel project. Pushes to `main` deploy production. `vercel.json` routes requests to Express.
+Netlify is the deployment target. Use Node.js 24, build command `npm run build:netlify`, publish directory `public`, and functions directory `netlify/functions`. Configure a pooled PostgreSQL `DATABASE_URL` and import existing data before accepting traffic. SQLite remains available for local development.
 
-Production uses the connected **private Vercel Blob** store via `BLOB_READ_WRITE_TOKEN`. Accounts, password hashes, sessions, classroom records and attachments stay in authenticated private storage across deployments and instances. Files are served only after the normal role/ownership checks.
-
-Each request reads the latest state with caching disabled. Conditional ETag writes prevent lost updates: independent record changes merge and retry, while competing edits to the same record return a conflict asking the user to refresh. Responses and login cookies are sent only after a successful save. This snapshot architecture suits a small LMS/demo; a large institution should migrate to a relational database.
-
-Without a Blob token, local development continues to use `data/smartclass.sqlite`. Vercel API requests fail explicitly if storage is not connected rather than accepting accounts into temporary storage. Check `/api/health`: `persistentStorage` must be `true`. Existing local accounts stay local; they are not automatically uploaded. Previously lost temporary cloud accounts cannot be recovered.
-
-Attendance QR links use the deployed HTTPS origin automatically. Uploads are limited to 4 MB to stay below [Vercel function payload limits](https://vercel.com/docs/errors/function_payload_too_large). AI requires a valid optional OpenRouter key and model.
-
-Cloud persistence verification is opt-in: pull production environment variables into the ignored `.vercel/.env.production.local` file, set `TEST_CLOUD_STORAGE=1`, and run `node --env-file=.vercel/.env.production.local --test tests/cloud-storage.test.js`. It uses an isolated verification namespace, never classroom records. See [Vercel Blob conditional writes and consistent reads](https://vercel.com/docs/vercel-blob/using-blob-sdk).
+See [NETLIFY_DEPLOYMENT.md](NETLIFY_DEPLOYMENT.md) for environment variables, safe data migration, deployment settings and verification. The Vercel configuration has been removed. The legacy Blob adapter remains available to support data export and rollback until migration is verified. Removing repository configuration does not disconnect or delete an existing Vercel project: disable its Git auto-deployment in the Vercel dashboard.

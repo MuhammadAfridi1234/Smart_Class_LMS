@@ -7,7 +7,7 @@ This is a vanilla HTML/CSS/JavaScript frontend with an Express API, not a framew
 1. Create a Netlify site by importing `MuhammadAfridi1234/Smart_Class_LMS` from GitHub, after committing these changes.
 2. Base directory: repository root (leave blank). Build: `npm run build:netlify`. Publish: `public`. Functions: `netlify/functions`. Node: 24, specified in netlify.toml. Set `AWS_LAMBDA_JS_RUNTIME=nodejs24.x` in Netlify's environment settings to pin the function runtime as well.
 3. Configure runtime environment variables below and import the database before accepting traffic.
-4. Deploy and run the verification below. Vercel configuration remains intact.
+4. Deploy and run the verification below. The Vercel deployment configuration has been removed. Disable the old project’s Git auto-deployment in Vercel before updating its production branch; repository changes alone do not disconnect that service.
 
 The build copies Chart.js into public/vendor/chart.js, preserving the existing frontend and offline service worker URL. Only `/api/*` rewrites to the Express function. Missing static paths return 404; no SPA fallback is needed. Function source and database files are outside the publish directory. Static security headers mirror Express headers.
 

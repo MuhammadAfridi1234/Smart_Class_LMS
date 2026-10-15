@@ -1,6 +1,6 @@
 # Netlify deployment
 
-This is a vanilla HTML/CSS/JavaScript frontend with an Express API, not a framework build. No live deployment has been performed.
+This is a vanilla HTML/CSS/JavaScript frontend with an Express API, not a framework build. A protected Netlify draft deployment was uploaded on October 15, 2026. Production cutover is pending DATABASE_URL and data migration.
 
 ## Settings and import
 
@@ -85,3 +85,11 @@ Local results: 10 automated tests passed on the publication branch, one existing
 - AI: requests retain the existing 30-second upstream timeout; provider latency and the platform function deadline can still cause failures.
 - Authentication throttling is the existing per-instance in-memory limiter; it is not a global rate limit across serverless instances. Consider a shared limiter for public production abuse protection.
 - Publication uses a clean clone because the original workspace has invalid Git worktree metadata. The migration branch preserves the latest GitHub login behavior.
+
+## Current deployment status
+
+Netlify project: https://app.netlify.com/projects/smartclass-lms-afridi
+
+Draft: https://6ad0cc4ce2f8a9fe49c07a50--smartclass-lms-afridi.netlify.app
+
+Netlify build and function bundling completed successfully. Unauthenticated HTTP verification receives the platform login protection (401), so application endpoints could not be verified remotely. DATABASE_URL and source migration credentials are not configured locally. Production has not been published. The existing Vercel project has not been disconnected or deleted.

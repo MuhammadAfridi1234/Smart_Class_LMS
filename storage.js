@@ -6,10 +6,11 @@ const path = require('node:path');
 // Local writes are serialized; cloud writes use conditional updates.
 function createStorage(seed) {
   const context = new AsyncLocalStorage();
-  const cloud = process.env.BLOB_READ_WRITE_TOKEN ? require('./cloud-storage').createCloudStorage(seed) : null;
+  const serverless = Boolean(process.env.VERCEL || process.env.NETLIFY);
+  const cloud = process.env.DATABASE_URL ? require('./postgres-storage').createPostgresStorage() : (!process.env.NETLIFY && process.env.BLOB_READ_WRITE_TOKEN ? require('./cloud-storage').createCloudStorage(seed) : null);
   let db, read, write;
   const dataDir = process.env.DATA_DIR || (process.env.VERCEL ? '/tmp/smartclass-data' : path.join(__dirname, 'data'));
-  if (!cloud && !process.env.VERCEL) {
+  if (!cloud && !serverless) {
     const { DatabaseSync } = require('node:sqlite');
     fs.mkdirSync(dataDir, { recursive: true });
     db = new DatabaseSync(path.join(dataDir, 'smartclass.sqlite'));
@@ -24,7 +25,7 @@ function createStorage(seed) {
   });
   let localQueue = Promise.resolve();
   async function middleware(req, res, next) {
-    if (!cloud && process.env.VERCEL) return res.status(503).json({ error: 'Cloud storage is not configured. Connect the private storage before signing in.' });
+    if (!cloud && serverless) return res.status(503).json({ error: 'Cloud storage is not configured. Connect the private storage before signing in.' });
     let unlock;
     try {
       let snapshot, etag;
@@ -72,7 +73,7 @@ function createStorage(seed) {
     }
   }
   return {
-    state, middleware, persistent: Boolean(cloud) || !process.env.VERCEL,
+    state, middleware, persistent: Boolean(cloud) || !serverless,
     save: () => { context.getStore().dirty = true; },
     async putFile(id, buffer) {
       if (cloud) await cloud.putFile(id, buffer);
@@ -82,7 +83,7 @@ function createStorage(seed) {
       if (cloud) return cloud.getFile(id);
       try { return fs.readFileSync(path.join(dataDir, id)); } catch (error) { if (error.code === 'ENOENT') return null; throw error; }
     },
-    close: () => db?.close()
+    close: () => cloud?.close?.() || db?.close()
   };
 }
 module.exports = { createStorage };

@@ -12,3 +12,6 @@ playwright-report/
 !.env.example
 
 .env*
+
+.netlify/
+public/vendor/chart.js

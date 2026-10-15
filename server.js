@@ -6,7 +6,7 @@ const QRCode = require('qrcode');
 const multer = require('multer');
 const path = require('node:path');
 const app = express();
-const isVercel = Boolean(process.env.VERCEL);
+const isVercel = Boolean(process.env.VERCEL || process.env.NETLIFY);
 const id = () => randomUUID();
 const now = () => new Date().toISOString();
 const publicUser = ({password, ...user}) => user;
@@ -38,7 +38,7 @@ app.get('/api/health', (req,res) => res.json({ok:true,persistentStorage:storage.
 app.use('/api', storage.middleware);
 const limits=new Map();
 app.use('/api/auth',(req,res,next)=>{const key=req.ip;const value=limits.get(key)||{n:0,end:Date.now()+60000};if(Date.now()>value.end){value.n=0;value.end=Date.now()+60000;}value.n++;limits.set(key,value);if(value.n>40)return res.status(429).json({error:'Too many attempts. Please wait one minute.'});next();});
-function sessionCookie(res,token){res.cookie('smartclass',token,{httpOnly:true,sameSite:'strict',secure:process.env.COOKIE_SECURE==='1' || Boolean(process.env.VERCEL),maxAge:86400000,path:'/'});}
+function sessionCookie(res,token){res.cookie('smartclass',token,{httpOnly:true,sameSite:'strict',secure:process.env.COOKIE_SECURE==='1' || isVercel,maxAge:86400000,path:'/'});}
 app.post('/api/auth/:action',(req,res)=>{const b=req.body;let u;if(req.params.action==='register'){const name=str(b.name,'Name',100),email=str(b.email,'Email',160).toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))fail('Enter a valid email.');if(!['teacher','student','guardian'].includes(b.role))fail('Choose a valid role.');if(state.users.some(u=>u.email===email))fail('An account already uses this email.');const password=str(b.password,'Password',72);if(password.length<8)fail('Use at least 8 characters for your password.');u={id:id(),name,email,role:b.role,password:bcrypt.hashSync(password,10),bio:'',phone:''};state.users.push(u);}else if(req.params.action==='login'){// Open sign-in identifies accounts by email without verifying passwords.
 const email=str(b.email,'Email',160).toLowerCase();
 if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))fail('Enter a valid email.');
